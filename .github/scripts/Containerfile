@@ -8,7 +8,7 @@ FROM ${VIKUNJA_IMAGE} AS vikunja
 
 FROM ${NODE_IMAGE} AS builder
 ARG VIKUNJA_MCP_REVISION=a42e1c2a3bd2b694e79a944fba5153970157b19d
-ARG SUPERGATEWAY_REVISION=973c4595250dcd59da83c12c4f11ff653b6cd4f0
+ARG SUPERGATEWAY_REVISION=a3ce8ba34c40f7565d1786e1dbd19621aca86093
 RUN apk add --no-cache git python3 make g++
 COPY .github/scripts/patch-vikunja-mcp.py /usr/local/bin/patch-vikunja-mcp.py
 
@@ -30,10 +30,12 @@ RUN git init \
     && git checkout --detach FETCH_HEAD \
     && test "$(git rev-parse HEAD)" = "${SUPERGATEWAY_REVISION}"
 COPY patches/supergateway-bearer.patch /tmp/supergateway-bearer.patch
+COPY patches/verify-supergateway.mjs /tmp/verify-supergateway.mjs
 RUN git apply --unidiff-zero --check /tmp/supergateway-bearer.patch \
     && git apply --unidiff-zero /tmp/supergateway-bearer.patch \
     && npm ci \
     && npm run build \
+    && node /tmp/verify-supergateway.mjs /src/supergateway VIKUNJA_API_TOKEN \
     && npm prune --omit=dev
 
 FROM ${NODE_IMAGE}

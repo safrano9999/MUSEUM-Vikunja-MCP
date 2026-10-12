@@ -2,7 +2,10 @@
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { createRequire } from 'node:module';
-const require = createRequire('/opt/vikunja-mcp/package.json');
+import { readFileSync } from 'node:fs';
+const require = createRequire('/opt/supergateway/package.json');
+assert.equal(JSON.parse(readFileSync('/opt/supergateway/package.json')).version, '4.1.0');
+assert.equal(JSON.parse(readFileSync('/opt/supergateway/node_modules/@modelcontextprotocol/sdk/package.json')).version, '1.30.0');
 const { Client } = await import(require.resolve('@modelcontextprotocol/sdk/client/index.js'));
 const { StreamableHTTPClientTransport } = await import(require.resolve('@modelcontextprotocol/sdk/client/streamableHttp.js'));
 const api = 'http://127.0.0.1:3456/api/v1';

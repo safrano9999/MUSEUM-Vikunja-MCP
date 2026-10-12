@@ -1,7 +1,7 @@
 # Vikunja MCP
 
 Combined container with the official Vikunja 2.6.0 binary,
-`democratize-technology/vikunja-mcp` 0.2.2 and Supergateway 3.4.3.
+`democratize-technology/vikunja-mcp` 0.2.2 and Supergateway 4.1.0.
 
 - Vikunja Web/API: port `3456`
 - Streamable HTTP MCP: `http://vikunja-mcp:8000/mcp`
