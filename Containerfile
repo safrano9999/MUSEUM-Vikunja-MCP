@@ -2,14 +2,16 @@
 # syntax=docker/dockerfile:1.7
 
 ARG VIKUNJA_IMAGE=docker.io/vikunja/vikunja:2.6.0@sha256:417ada6f94e81f0267aa2f007d0a811fc82d38dd2aa58351e3ea520ca01c2ea5
-ARG NODE_IMAGE=docker.io/library/node:24-alpine@sha256:760e44b64c78674d9c79fa32e63c0ba8f817f79791e1aa32e07669bb0bfeaeaa
+ARG NODE_IMAGE=docker.io/library/node:26.12.1-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797
 
 FROM ${VIKUNJA_IMAGE} AS vikunja
 
 FROM ${NODE_IMAGE} AS builder
 ARG VIKUNJA_MCP_REVISION=a42e1c2a3bd2b694e79a944fba5153970157b19d
 ARG SUPERGATEWAY_REVISION=a3ce8ba34c40f7565d1786e1dbd19621aca86093
-RUN apk add --no-cache git python3 make g++
+RUN apk upgrade --no-cache \
+    && apk add --no-cache git 'python3>=3.14.8-r0' make g++ 'ca-certificates>=20261020-r0' \
+    && test "$(node --version)" = v26.12.1
 COPY .github/scripts/patch-vikunja-mcp.py /usr/local/bin/patch-vikunja-mcp.py
 
 WORKDIR /src/vikunja-mcp
@@ -39,7 +41,9 @@ RUN git apply --unidiff-zero --check /tmp/supergateway-bearer.patch \
     && npm prune --omit=dev
 
 FROM ${NODE_IMAGE}
-RUN apk add --no-cache ca-certificates tini \
+RUN apk upgrade --no-cache \
+    && apk add --no-cache 'ca-certificates>=20261020-r0' tini \
+    && test "$(node --version)" = v26.12.1 \
     && mkdir -p /app/vikunja/files /opt/vikunja-mcp /opt/supergateway \
     && chown -R 1000:1000 /app/vikunja /opt/vikunja-mcp /opt/supergateway
 COPY --from=vikunja --chown=1000:1000 /app/vikunja/vikunja /app/vikunja/vikunja
