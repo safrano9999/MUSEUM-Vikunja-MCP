@@ -7,6 +7,7 @@ ARG NODE_IMAGE=docker.io/library/node:26.12.1-alpine@sha256:40cd011b55415bc894e4
 FROM ${VIKUNJA_IMAGE} AS vikunja
 
 FROM ${NODE_IMAGE} AS builder
+ARG BETTER_SQLITE3_VERSION=12.10.1
 ARG VIKUNJA_MCP_REVISION=a42e1c2a3bd2b694e79a944fba5153970157b19d
 ARG SUPERGATEWAY_REVISION=a3ce8ba34c40f7565d1786e1dbd19621aca86093
 RUN apk upgrade --no-cache \
@@ -20,7 +21,9 @@ RUN git init \
     && git fetch --depth=1 origin "${VIKUNJA_MCP_REVISION}" \
     && git checkout --detach FETCH_HEAD \
     && test "$(git rev-parse HEAD)" = "${VIKUNJA_MCP_REVISION}" \
+    && npm install --package-lock-only --ignore-scripts --save-exact "better-sqlite3@${BETTER_SQLITE3_VERSION}" \
     && npm ci \
+    && node -e "const Database = require('better-sqlite3'); const db = new Database(':memory:'); if (db.prepare('select 42 as n').get().n !== 42) process.exit(1); db.close()" \
     && python3 /usr/local/bin/patch-vikunja-mcp.py . \
     && npm run build \
     && npm prune --omit=dev
